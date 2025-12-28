@@ -1,0 +1,7 @@
+{
+  "name": "Celestial Hands Particle System",
+  "description": "An immersive Three.js particle interaction system that responds to hand gestures. Use your left hand to switch between words (1, 2, or 3 fingers) and your right hand to attract, repel, or displace particles based on whether your hand is open or closed.",
+  "requestFramePermissions": [
+    "camera"
+  ]
+}
