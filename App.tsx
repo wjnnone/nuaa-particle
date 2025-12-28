@@ -4,41 +4,32 @@ import { Canvas } from '@react-three/fiber';
 import { Environment, PerspectiveCamera } from '@react-three/drei';
 import ParticleSystem from './components/ParticleSystem';
 import { HandTracker } from './services/handTracking';
-import { GoogleGenAI } from "@google/genai";
 
 const App: React.FC = () => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const [leftGesture, setLeftGesture] = useState<number>(1);
   const [rightHand, setRightHand] = useState<{ x: number; y: number; z: number; isFist: boolean } | null>(null);
   const [cameraReady, setCameraReady] = useState(false);
-  const [aiGreeting, setAiGreeting] = useState("Initializing system...");
   const [isUiExpanded, setIsUiExpanded] = useState(true);
+
+  // Poetic greetings available locally
+  const localGreetings = [
+    "星辰随指尖起舞，光影在掌心流转。",
+    "万物皆为粒子，于虚空中塑形。",
+    "指引流光的轨迹，雕琢梦幻的星域。",
+    "在静谧的暗夜中，用双手触碰繁星。"
+  ];
+  const [aiGreeting] = useState(() => localGreetings[Math.floor(Math.random() * localGreetings.length)]);
 
   // Custom texts for gestures
   const [texts, setTexts] = useState<string[]>(() => {
       const saved = localStorage.getItem('celestial-texts');
-      return saved ? JSON.parse(saved) : ["HELLO", "南航", "I LOVE YOU"];
+      return saved ? JSON.parse(saved) : ["你好", "粒子", "星空"];
   });
 
   useEffect(() => {
       localStorage.setItem('celestial-texts', JSON.stringify(texts));
   }, [texts]);
-
-  useEffect(() => {
-    const initGemini = async () => {
-      try {
-        const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-        const response = await ai.models.generateContent({
-          model: 'gemini-3-flash-preview',
-          contents: "Poetic 1-sentence welcome for a customizable particle app. Max 10 words.",
-        });
-        if (response.text) setAiGreeting(response.text);
-      } catch (err) {
-        setAiGreeting("Shape the stars with your will.");
-      }
-    };
-    initGemini();
-  }, []);
 
   const handleHandResults = useCallback((results: any) => {
     if (!results.multiHandLandmarks) {
@@ -117,7 +108,7 @@ const App: React.FC = () => {
           <div className="p-3 md:p-4 flex items-center justify-between cursor-pointer select-none" onClick={() => setIsUiExpanded(!isUiExpanded)}>
             {isUiExpanded ? (
               <h1 className="text-sm md:text-lg font-black bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent truncate uppercase tracking-widest">
-                Celestial Hands
+                星空交互系统
               </h1>
             ) : null}
             <button className="flex-shrink-0 w-8 h-8 flex items-center justify-center rounded-full hover:bg-white/10 transition-colors">
@@ -139,16 +130,16 @@ const App: React.FC = () => {
             <div className="space-y-6">
               {/* Settings Section */}
               <div className="space-y-4">
-                <p className="text-[10px] font-bold text-white/40 uppercase tracking-[0.2em] mb-2">Customize Gestures</p>
+                <p className="text-[10px] font-bold text-white/40 uppercase tracking-[0.2em] mb-2">自定义交互文字</p>
                 {texts.map((t, idx) => (
                     <div key={idx} className={`p-3 rounded-xl border transition-colors ${leftGesture === idx + 1 ? 'bg-blue-500/10 border-blue-500/50' : 'bg-white/5 border-white/5'}`}>
-                        <label className="block text-[9px] mb-1 opacity-50 uppercase tracking-widest">Gesture {idx + 1} (Fingers)</label>
+                        <label className="block text-[9px] mb-1 opacity-50 uppercase tracking-widest">手势 {idx + 1} (伸出手指数量)</label>
                         <input 
                             type="text" 
                             value={t} 
                             onChange={(e) => updateText(idx, e.target.value)}
                             className="w-full bg-transparent border-none outline-none text-xs font-bold text-white placeholder-white/20 pointer-events-auto"
-                            placeholder={`Enter text for gesture ${idx + 1}...`}
+                            placeholder={`输入手势 ${idx + 1} 触发的文字...`}
                             maxLength={30}
                         />
                     </div>
@@ -158,13 +149,13 @@ const App: React.FC = () => {
               {/* Status Section */}
               <div className="grid grid-cols-2 gap-3 pt-2 border-t border-white/5">
                 <div className="space-y-1">
-                  <p className="text-[8px] uppercase tracking-widest opacity-40 font-bold">L-Hand Mode</p>
-                  <p className="text-[10px] font-bold text-cyan-400">Word Trigger</p>
+                  <p className="text-[8px] uppercase tracking-widest opacity-40 font-bold">左手状态</p>
+                  <p className="text-[10px] font-bold text-cyan-400">切换文字</p>
                 </div>
                 <div className="space-y-1 text-right">
-                  <p className="text-[8px] uppercase tracking-widest opacity-40 font-bold">R-Hand Mode</p>
+                  <p className="text-[8px] uppercase tracking-widest opacity-40 font-bold">右手状态</p>
                   <p className={`text-[10px] font-bold ${rightHand?.isFist ? 'text-pink-400' : 'text-blue-400'}`}>
-                    {rightHand ? (rightHand.isFist ? 'Attracting' : 'Repelling') : 'Idle'}
+                    {rightHand ? (rightHand.isFist ? '吸引粒子' : '排斥粒子') : '等待交互'}
                   </p>
                 </div>
               </div>
@@ -193,7 +184,7 @@ const App: React.FC = () => {
       {/* Dynamic Instruction Helper */}
       {!rightHand && cameraReady && (
         <div className="absolute bottom-6 md:bottom-12 left-1/2 -translate-x-1/2 px-6 py-3 bg-black/20 backdrop-blur-3xl rounded-full text-white text-[9px] md:text-xs font-black tracking-[0.3em] border border-white/5 animate-pulse whitespace-nowrap uppercase">
-          Raise hands to sculpt light
+          举起双手，塑造星辰
         </div>
       )}
     </div>
